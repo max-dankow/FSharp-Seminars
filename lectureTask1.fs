@@ -6,9 +6,8 @@ let rec iter f x a b =
     else iter f (f a x) (a + 1) b
 
 let myexp x n = 
-    let second (x,y) = y
     let rec myexp' x = iter (fun i (prev, sum) -> let current = prev * x / (float i) in (current, sum + current)) (1., 1.) 1 n
-    myexp' x |> second
+    myexp' x |> snd
 
 iter (fun i _ ->  printfn "n=%d, exp(1) = %f" i (myexp 1. i)) (printfn "") 1 10
 
