@@ -72,4 +72,4 @@ let rec lTake n x =
     then []
     else List.head x :: (lTake (n - 1) (List.tail x))
 take 3 lastNumbs
-lTake 5 lastNumbs
+lTake 3 [1..10]

@@ -3,14 +3,9 @@
     then 1
     else pascal col (row - 1) + pascal (col - 1) (row - 1)
 
-let printPascalLn n = 
-    for i = 0 to n do printf "%d " (pascal i n)
-
-printPascalLn 4
-
 let printIt n = 
     for i = 0 to n do 
-        for i = 0 to n do printf "%d " (pascal i n)
+        for j = 0 to i do printf "%d " (pascal j i)
         printfn ""
                  
-printIt 10
+printIt 20
