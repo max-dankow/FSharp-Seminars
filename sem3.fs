@@ -39,6 +39,7 @@ let implode = implode' ""
 
 (explode >> implode) "abacababa"
 
+// Удаляет все вхождения буквы c из строки.
 let deleteLetter c =
     let rec delete' c = function
         | [] -> []
