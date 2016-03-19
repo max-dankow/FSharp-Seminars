@@ -19,8 +19,8 @@ let n, a, b = 20., 0., 1. // интервал [0; 1]
 // Раскладывает функцию в ряд Тейлора, в лоб считая члены.
 let private nthMember (x:float) k = 
     let fac = function 
-        | 0 | 1 -> 1.
-        | n -> [for k in [1..n] -> float k] |> List.reduce ( * )
+    | 0 | 1 -> 1.
+    | n -> [for k in [1..n] -> float k] |> List.reduce ( * )
     ((log 3. * x) ** float k) / float (fac k)
 
 let rec private tailor_ acc x : Result =
@@ -53,20 +53,44 @@ let printTailor () =
 printTailor()
 // *** Вторая часть
 
-let fSolve = fun x -> x // функция, решение которой ищем
+let fSolve = fun x -> log x - x + 1.8// функция, решение которой ищем
+let fiSolve = fun x -> log x + 1.8
+let left, right = 2., 3.
+let epsilon = 1e-10
 
-let iter f a b : Result = (42., 0)
+let iter f a b : Result =
+    let rec iter' acc =
+        let cur = f (fst acc)
+        if abs(cur - fst acc) < epsilon
+        then (cur, snd acc + 1)
+        else iter' (cur, snd acc + 1)
+
+    iter' ((a + b) / 2., 0)
+iter (fiSolve) left right
+
 let newton f a b : Result = (42., 0)
+
 let dichotomy =
     // для функций с аккумулятором удобно ставить его в начало
-    let rec dichotomyA i (f:float->float) (a:float) (b:float) : Result = (42., 0) 
+    let rec dichotomyA i (f:float->float) (a:float) (b:float) : Result = 
+        let middle = (a + b) / 2. in
+       
+        if b < a
+        then failwith "Wrong arguments"
+
+        if b - a < epsilon
+        then (middle, i)
+        else 
+            if (f a) * (f middle) < 0.
+            then dichotomyA (i + 1) f a middle
+            else dichotomyA (i + 1) f middle b
     dichotomyA 0 // чтобы воспользоваться каррированием
 
 let printSolve () =
-    [iter; newton; dichotomy] 
-    |> List.map (fun f -> f fSolve a b) 
+    [iter fiSolve left right; newton fSolve left right; dichotomy fSolve left right] 
     |> List.iter (fun (res, cou) -> printf "%f\t%d\n" res cou)
 
+printSolve ()
 (*let main () = 
   let values = new NameValueCollection()
   values.Add("email", email)
