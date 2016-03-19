@@ -57,10 +57,13 @@ let precision = 1e-10
 // Метод итерации.
 let iter f a b : Result =
     let rec iter' acc =
-        let cur = f (fst acc)
-        if abs(cur - fst acc) < precision
-        then (cur, snd acc + 1)
-        else iter' (cur, snd acc + 1)
+        if snd acc > 100
+        then (infinity, -1)
+        else
+            let cur = f (fst acc)
+            if abs(cur - fst acc) < precision
+            then (cur, snd acc + 1)
+            else iter' (cur, snd acc + 1)
     iter' ((a + b) / 2., 0)
 
 // Метод Ньютона.
@@ -77,7 +80,6 @@ let newton f f' f'' a b =
 
 // Метод половинного деления.
 let dichotomy =
-    // для функций с аккумулятором удобно ставить его в начало
     let rec dichotomyA i (f:float->float) (a:float) (b:float) : Result = 
         let middle = (a + b) / 2. in
        
@@ -93,18 +95,24 @@ let dichotomy =
                 if (f b) * (f middle) < 0. 
                 then dichotomyA (i + 1) f middle b
                 else failwith "Wrong arguments"
-    dichotomyA 0 // чтобы воспользоваться каррированием
+    dichotomyA 0
 
-//  Вариант 12.
-let f12 = fun x -> log x - x + 1.8  // функция, решение которой ищем
-let fi12 = fun x -> log x + 1.8  // f(x) = 0 <=> fi(x) = x
-let f12' = fun x -> 1. / x - 1.  // ее первая производная.
-let f12'' = fun x -> -1. / (x ** 2.)  // ее вторая производная
-let l12, r12 = 2., 3.
-
-let l = [(fun x->x, 10); (fun x->x, 0)]
-let tasks = [((fun x -> log x - x + 1.8), (fun x -> log x + 1.8), (fun x -> 1. / x - 1.), (fun x -> -1. / (x ** 2.)), 2., 3.); 
-             ((fun x -> log x - x + 1.8), (fun x -> log x + 1.8), (fun x -> 1. / x - 1.), (fun x -> -1. / (x ** 2.)), 2., 3.)]
+let cotan = tan >> (/) 1.
+let tasks = [((fun x -> log x - x + 1.8),  // Вариант 12
+              (fun x -> log x + 1.8), 
+              (fun x -> 1. / x - 1.),
+              (fun x -> -1. / (x ** 2.)), 
+              2., 3.);  
+             ((fun x -> x * tan x - 1./3.),  // Вариант 13
+              (fun x -> 1. / (3. * tan x)),  // не работает[!!!]
+              (fun x -> tan x + x / (cos x ** 2.)), 
+              (fun x -> (2. * cos x ** 2. + sin (2. * x))/(cos x ** 4.)), 
+              0.2, 1.);
+             ((fun x -> tan (x / 2.) - cotan(x / 2.) + x),  // Вариант 14
+              (fun x -> cotan (x / 2.) - tan (x / 2.)),  // не работает!!!
+              (fun x -> 2. / (sin x ** 2.) + 1.), 
+              (fun x -> -4. / (sin x ** 3.)), 
+              1., 2.)]
 
 let printSolve (f, fi, f', f'', l, r) =
     [iter fi l r; newton (f) (f') (f'') l r; dichotomy f l r] 
