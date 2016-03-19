@@ -52,24 +52,30 @@ let printTailor () =
 
 printTailor()
 // *** Вторая часть
+let precision = 1e-10
 
-let fSolve = fun x -> log x - x + 1.8// функция, решение которой ищем
-let fiSolve = fun x -> log x + 1.8
-let left, right = 2., 3.
-let epsilon = 1e-10
-
+// Метод итерации.
 let iter f a b : Result =
     let rec iter' acc =
         let cur = f (fst acc)
-        if abs(cur - fst acc) < epsilon
+        if abs(cur - fst acc) < precision
         then (cur, snd acc + 1)
         else iter' (cur, snd acc + 1)
-
     iter' ((a + b) / 2., 0)
-iter (fiSolve) left right
 
-let newton f a b : Result = (42., 0)
+// Метод Ньютона.
+let rec private newton' i f f' prev : Result = 
+    let cur = prev - f prev / f' prev
+    if abs(cur - prev) < precision
+    then (cur, i)
+    else newton' (i + 1) f f' cur
+      
+let newton f f' f'' a b = 
+    if f a * f'' a > 0.
+    then newton' 0 f f' b
+    else newton' 0 f f' a
 
+// Метод половинного деления.
 let dichotomy =
     // для функций с аккумулятором удобно ставить его в начало
     let rec dichotomyA i (f:float->float) (a:float) (b:float) : Result = 
@@ -78,19 +84,36 @@ let dichotomy =
         if b < a
         then failwith "Wrong arguments"
 
-        if b - a < epsilon
+        if b - a < precision
         then (middle, i)
         else 
             if (f a) * (f middle) < 0.
             then dichotomyA (i + 1) f a middle
-            else dichotomyA (i + 1) f middle b
+            else 
+                if (f b) * (f middle) < 0. 
+                then dichotomyA (i + 1) f middle b
+                else failwith "Wrong arguments"
     dichotomyA 0 // чтобы воспользоваться каррированием
 
-let printSolve () =
-    [iter fiSolve left right; newton fSolve left right; dichotomy fSolve left right] 
+//  Вариант 12.
+let f12 = fun x -> log x - x + 1.8  // функция, решение которой ищем
+let fi12 = fun x -> log x + 1.8  // f(x) = 0 <=> fi(x) = x
+let f12' = fun x -> 1. / x - 1.  // ее первая производная.
+let f12'' = fun x -> -1. / (x ** 2.)  // ее вторая производная
+let l12, r12 = 2., 3.
+
+let l = [(fun x->x, 10); (fun x->x, 0)]
+let tasks = [((fun x -> log x - x + 1.8), (fun x -> log x + 1.8), (fun x -> 1. / x - 1.), (fun x -> -1. / (x ** 2.)), 2., 3.); 
+             ((fun x -> log x - x + 1.8), (fun x -> log x + 1.8), (fun x -> 1. / x - 1.), (fun x -> -1. / (x ** 2.)), 2., 3.)]
+
+let printSolve (f, fi, f', f'', l, r) =
+    [iter fi l r; newton (f) (f') (f'') l r; dichotomy f l r] 
     |> List.iter (fun (res, cou) -> printf "%f\t%d\n" res cou)
 
-printSolve ()
+let ln = fun task -> 
+    printfn "*******************\n" 
+    printSolve task
+List.map (ln) tasks
 (*let main () = 
   let values = new NameValueCollection()
   values.Add("email", email)
