@@ -1,0 +1,2 @@
+echo -e "\nИсполнение $1...\n"
+cat $1 | fsharpi --nologo
