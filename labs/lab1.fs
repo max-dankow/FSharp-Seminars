@@ -104,12 +104,12 @@ let tasks = [((fun x -> log x - x + 1.8),  // Вариант 12
               (fun x -> -1. / (x ** 2.)), 
               2., 3.);  
              ((fun x -> x * tan x - 1./3.),  // Вариант 13
-              (fun x -> 1. / (3. * tan x)),  // не работает[!!!]
+              (fun x -> 1. / (3. * tan x)),  // Метод итарации не применим
               (fun x -> tan x + x / (cos x ** 2.)), 
               (fun x -> (2. * cos x ** 2. + sin (2. * x))/(cos x ** 4.)), 
               0.2, 1.);
              ((fun x -> tan (x / 2.) - cotan(x / 2.) + x),  // Вариант 14
-              (fun x -> cotan (x / 2.) - tan (x / 2.)),  // не работает!!!
+              (fun x -> cotan (x / 2.) - tan (x / 2.)),  // Метод итарации не применим
               (fun x -> 2. / (sin x ** 2.) + 1.), 
               (fun x -> -4. / (sin x ** 3.)), 
               1., 2.)]
@@ -121,14 +121,15 @@ let printSolve (f, fi, f', f'', l, r) =
 let ln = fun task -> 
     printfn "*******************\n" 
     printSolve task
-List.map (ln) tasks
-(*let main () = 
+
+let main () = 
   let values = new NameValueCollection()
   values.Add("email", email)
   values.Add("content", File.ReadAllText(__SOURCE_DIRECTORY__ + @"/" + __SOURCE_FILE__))
 
   let client = new WebClient()
-  let response = client.UploadValues(new Uri("http://mipt.eu01.aws.af.cm/lab1"), values)
+  let response = client.UploadValues(new Uri("http://91.239.143.158/lab1"), values)
   let responseString = Text.Encoding.Default.GetString(response)
 
-  printf "%A\n" responseString*)
+  printf "%A\n" responseString
+main()
