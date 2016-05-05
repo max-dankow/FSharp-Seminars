@@ -95,24 +95,7 @@ let rec parse_tokens tokens =
     | res, [] -> res
     | _ -> failwith "Wrong JSON structure"
 
-let s = """
-{
-   "firstName": "Иван",
-   "lastName": "Иванов",
-   "address": {
-       "streetAddress": "Московское ш., 101, кв.101",
-       "city": "Ленинград",
-       "postalCode": 101101
-   },
-   "phoneNumbers": [
-       "812 123-1234",
-       "916 123-4567"
-   ]
-}
-"""
-
 let parse_str = explode >> tokenize >> parse_tokens
-let json = parse_str s
 
 // ************************** Вариант 12 ******************************************** //
 let inRange a b (x: int) : bool = 
@@ -124,29 +107,44 @@ let rec task12 a b = function
     | JSON.Number value -> inRange a b value
     | _ -> true
 
-let res = s |> parse_str |> task12 0 10
-
 // ************************** Сериализация ****************************************** //
 let offset (n: int) : string =
     if ( n = 0 )
     then String.Empty
     else [for i in [1..n] -> "    "] |> List.reduce (+)
 
-let rec stringify (level: int) (json: JSON) : string = 
+let rec private stringify' (level: int) (json: JSON) : string = 
     let current_offset = offset level
     let next_offset = offset (level + 1)
     match json with
     | JSON.Object list -> 
         "{\n"        
-            + (list |> List.map (fun (name, value) -> next_offset + "\"" + name + "\": " + (stringify (level + 1) value)) |> List.reduce (fun s1 s2 -> s1 + ",\n" + s2))
-        + current_offset + "\n}"
+        + (list |> List.map (fun (name, value) -> next_offset + "\"" + name + "\": " + (stringify' (level + 1) value)) |> List.reduce (fun s1 s2 -> s1 + ",\n" + s2))
+        + "\n" + current_offset + "}"
+    | JSON.Array values ->
+        "[\n"        
+        + (values |> List.map (fun (value) -> next_offset + (stringify' (level + 1) value)) |> List.reduce (fun s1 s2 -> s1 + ",\n" + s2))
+        + "\n" + current_offset + "]"
     | JSON.Number number -> number.ToString()
-    | String s -> "\"" + s + "\""
-    | Boolean b -> b.ToString()
-    | Null -> "null"
-    | _ -> "fuckoff"
+    | JSON.String s -> "\"" + s + "\""
+    | JSON.Boolean b -> b.ToString()
+    | JSON.Null -> "null"
+let stringify = stringify' 0
 
-printfn "%s" (s |> parse_str |> stringify 0)
+let test_JSON_conversion s =
+    try
+        let applied = s |> parse_str |> stringify
+        if ( applied |> parse_str |> stringify = applied) 
+        then printfn "%s" applied
+        else failwith "ERROR"
+    with
+        | _ -> printfn "Invalid argiment. Program is OK."
+
+open System.IO
+let path_to_tests = "programming/fp/labs/" in
+let manual_tests = ["test1"; "test2"; "test3"; "test4"; "lab2.fs"] |> List.map ((+) path_to_tests) |> List.map (File.ReadAllText)
+
+List.iter (test_JSON_conversion) manual_tests
 
 let generate = 
   let rnd = new Random()
@@ -165,33 +163,3 @@ let main () =
 
   printf "%A\n" responseString
 
-
-  (*
-  let fst3 (a, b, c) = a
-let snd3 (a, b, c) = b
-let thrd3 (a, b, c) = c
-
-let wlReturn (x: 'a) : ('a * int * string) = (x, 0, String.Empty)
-let wlReturnFrom (x: 'a * int * string) : 'a * int * string = x
-let wlBind (mx: ('a * int * string)) (f: 'a -> 'b * int * string) : 'b * int * string = 
-    let res = f (fst3 mx)
-    (fst3 res, 0, thrd3 mx + thrd3 res)
-
-type WriteWithLevelMonad() =
-    member x.Bind(p, f) = wlBind p f
-    member x.Return(y) = wlReturn y
-    member x.ReturnFrom(y) = wlReturnFrom y
-
-let writer = new WriteWithLevelMonad()
-
-
-
-let squared x = (JSON.Null, 0, " NULL yopta ")
-//let halved x = (x / 2, " was halved.")
- 
-let a = writer {
-    let! a = wlReturn 4
-    let! b = squared a
-    return b
-}
-  *)
