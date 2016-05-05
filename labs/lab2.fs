@@ -119,11 +119,14 @@ let rec private stringify' (level: int) (json: JSON) : string =
     match json with
     | JSON.Object list -> 
         "{\n"        
-        + (list |> List.map (fun (name, value) -> next_offset + "\"" + name + "\": " + (stringify' (level + 1) value)) |> List.reduce (fun s1 s2 -> s1 + ",\n" + s2))
+        + (list |> List.map (fun (name, value) -> 
+            next_offset + "\"" + name + "\": " + (stringify' (level + 1) value)) 
+          |> List.reduce (fun s1 s2 -> s1 + ",\n" + s2))
         + "\n" + current_offset + "}"
     | JSON.Array values ->
         "[\n"        
-        + (values |> List.map (fun (value) -> next_offset + (stringify' (level + 1) value)) |> List.reduce (fun s1 s2 -> s1 + ",\n" + s2))
+        + (values |> List.map (fun (value) -> next_offset + (stringify' (level + 1) value)) 
+           |> List.reduce (fun s1 s2 -> s1 + ",\n" + s2))
         + "\n" + current_offset + "]"
     | JSON.Number number -> number.ToString()
     | JSON.String s -> "\"" + s + "\""
@@ -131,6 +134,7 @@ let rec private stringify' (level: int) (json: JSON) : string =
     | JSON.Null -> "null"
 let stringify = stringify' 0
 
+// ************************** Ручное тестирование *********************************** //
 let test_JSON_conversion s =
     try
         let applied = s |> parse_str |> stringify
@@ -141,16 +145,35 @@ let test_JSON_conversion s =
         | _ -> printfn "Invalid argiment. Program is OK."
 
 open System.IO
-let path_to_tests = "programming/fp/labs/" in
-let manual_tests = ["test1"; "test2"; "test3"; "test4"; "lab2.fs"] |> List.map ((+) path_to_tests) |> List.map (File.ReadAllText)
+let path_to_tests = "programming/fp/labs/tests/" in
+let manual_tests = ["test1"; "test2"; "test3"; "test4"] |> List.map ((+) path_to_tests) |> List.map (File.ReadAllText)
 
 List.iter (test_JSON_conversion) manual_tests
 
-let generate = 
-  let rnd = new Random()
-  match rnd.Next(42) with
-    | 0 -> Object []
-    | _ -> Object [("random", Object [])]
+// ************************** Генерация случайного дерева *************************** //
+let random_char = 
+    let rnd = new Random()
+    let chars = List.concat [['a'..'z'];['A'..'Z'];['0'..'9']]
+    let char_number = chars.Length
+    Seq.initInfinite (fun _ -> chars.[rnd.Next(char_number)])
+
+let random_str len = Seq.take len random_char |> Seq.map (string) |> Seq.reduce (+)
+
+let rnd = new Random()
+let rec generate rest : JSON = 
+    let next_depth = rest - 1;
+    let rand_max = if next_depth = 0 then 4 else 9
+    let rand_min = if rest >= 5 then 4 else 0
+    match rnd.Next(rand_min, rand_max) with
+        | 0 -> JSON.Number (rnd.Next())  // number
+        | 1 -> JSON.String (random_str (rnd.Next 20 + 1))  // string
+        | 2 -> JSON.Boolean (rnd.Next 2 = 1)
+        | 3 -> JSON.Null
+        | 4 | 5 | 6 -> let number = rnd.Next(5) in
+                       JSON.Object [for i in 0..number -> (random_str (rnd.Next 20 + 1), generate next_depth)] 
+        | 7 | 8 -> let number = rnd.Next(5) in
+                   JSON.Array [for i in 0..number -> generate next_depth]
+generate 5 |> stringify |> printfn "%s"
 
 let main () = 
   let values = new NameValueCollection()
@@ -162,4 +185,3 @@ let main () =
   let responseString = Text.Encoding.Default.GetString(response)
 
   printf "%A\n" responseString
-
