@@ -5,7 +5,7 @@ open System.Text
 open System.Collections.Specialized
 
 // почтовый адрес
-let email = ""
+let email = "max.dankow@gmail.com"
 
 let explode (s:string) =
   [for c in s -> c]
@@ -162,11 +162,13 @@ let random_str len = Seq.take len random_char |> Seq.map (string) |> Seq.reduce 
 let rnd = new Random()
 let rec generate rest : JSON = 
     let next_depth = rest - 1;
+    // Для невырожденности и умеренной глубины дерева
     let rand_max = if next_depth = 0 then 4 else 9
     let rand_min = if rest >= 5 then 4 else 0
+
     match rnd.Next(rand_min, rand_max) with
-        | 0 -> JSON.Number (rnd.Next())  // number
-        | 1 -> JSON.String (random_str (rnd.Next 20 + 1))  // string
+        | 0 -> JSON.Number (rnd.Next())
+        | 1 -> JSON.String (random_str (rnd.Next 20 + 1))
         | 2 -> JSON.Boolean (rnd.Next 2 = 1)
         | 3 -> JSON.Null
         | 4 | 5 | 6 -> let number = rnd.Next(5) in
@@ -185,3 +187,5 @@ let main () =
   let responseString = Text.Encoding.Default.GetString(response)
 
   printf "%A\n" responseString
+
+main()

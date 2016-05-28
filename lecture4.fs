@@ -134,8 +134,8 @@ let rec permute = function
 [1..5] |> permute
 
 let counter n =
-    let mutable x = n
-    fun () -> x<-x+1; 0
+    let x = ref n
+    fun () -> x := !x+1; 0
 
 seq {1..10} |> Seq.fold ( * ) 1
 let fact (n:int) = (..) 1 >> Seq.reduce ( * )
